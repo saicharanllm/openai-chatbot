@@ -164,8 +164,11 @@ current = st.session_state.chats[st.session_state.current_chat]
 with st.sidebar:
     st.button(":material/edit_square: New chat", on_click=new_chat, key="new_chat_btn")
 
-    st.markdown('<div class="side-heading">Projects</div>', unsafe_allow_html=True)
-    st.markdown('<div class="side-empty">No projects</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="color:#8e8e8e;font-size:14px;font-weight:600;padding:16px 0 4px 10px;">Projects</div>'
+        '<div style="color:#b0b0b0;font-size:14px;padding:0 0 12px 10px;">No projects</div>',
+        unsafe_allow_html=True,
+    )
 
     with st.expander("Features", expanded=False):
         for name in FEATURES:
