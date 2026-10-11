@@ -46,6 +46,7 @@ def get_secret(name):
 
 
 MODEL = get_secret("GEMINI_MODEL") or "gemini-3.8-flash"
+WEB_MODEL = get_secret("GEMINI_WEB_MODEL") or "gemini-2.5-flash"
 IMAGE_MODEL = get_secret("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-image"
 
 
@@ -60,6 +61,14 @@ def api_error(status, image_mode=False):
     if status in (401, 403):
         return f"{subject} access was denied. Check the API key, model access and billing in Google AI Studio."
     if status == 429:
+        if image_mode:
+            return (
+                "Google Gemini could not generate this image (quota/rate limit). "
+                "Gemini image generation is not available on the free API tier. "
+                "If your key's project is on the free tier, billing must be enabled in "
+                "Google AI Studio for paid image generation. If billing is already enabled, "
+                "check the model's quota and reset time. No OpenAI key is used."
+            )
         return f"{subject} quota or rate limit reached. Check your Google API quota/billing before retrying."
     if status == 404:
         return f"{subject} model is unavailable. Set an available model in Streamlit secrets."
@@ -74,7 +83,8 @@ def call_gemini(key, contents, image_mode=False, live_web=True):
     body = {"contents": contents}
     if image_mode:
         body["generationConfig"] = {"responseModalities": ["TEXT", "IMAGE"]}
-        models = [IMAGE_MODEL, "gemini-2.5-flash-image"]
+        # Do not fall back to the retired Gemini 2.5 image model or another provider.
+        models = [IMAGE_MODEL]
     else:
         search_note = (
             "Google Search is available. Use it for current, recent, time-sensitive or "
@@ -87,7 +97,10 @@ def call_gemini(key, contents, image_mode=False, live_web=True):
         )}]}
         if live_web:
             body["tools"] = [{"googleSearch": {}}]
-        models = [MODEL, "gemini-2.5-flash"]
+        # Gemini 3 search grounding can have zero free-tier quota even when text
+        # generation is available. Keep web answers on a separately configured
+        # grounding model, using exactly the same Google API key.
+        models = [WEB_MODEL] if live_web else [MODEL, "gemini-2.5-flash"]
     payload = json.dumps(body).encode("utf-8")
     if len(payload) > MAX_REQUEST_BYTES:
         raise ValueError("This conversation is too large to send. Start a new chat with fewer or smaller files.")
@@ -423,6 +436,7 @@ with st.sidebar:
 # ---------- Main area ----------
 st.title("AI Chatbot")
 st.caption("Ask a question, attach a file, or create an image.")
+st.caption("Powered by Google Gemini only. No OpenAI API key is required.")
 
 api_key = get_secret("GEMINI_API_KEY") or st.sidebar.text_input("Gemini API key", type="password")
 if not api_key:
@@ -455,7 +469,7 @@ with web_col:
 if files:
     st.caption("Ready to attach: " + ", ".join(f.name for f in files))
 if image_mode:
-    st.caption("Describe an image below. Attach a PNG, JPEG or WebP as a reference. Image generation needs Google model access and may require paid quota.")
+    st.caption("Describe an image below. Attach a PNG, JPEG or WebP as a reference. Gemini image generation requires paid API access; it is not available on the free tier.")
 else:
     st.caption("Live web uses Google Search when needed; source links show when results were retrieved. Google API charges may apply.")
 
@@ -463,6 +477,8 @@ prompt = st.chat_input("Describe your image..." if image_mode else "Type your me
 retry = False
 if current.get("failed"):
     st.error(current["failed"]["error"])
+    if current["failed"]["image_mode"]:
+        st.link_button("Check Google image quota / billing", "https://aistudio.google.com/rate-limit")
     retry = st.button("Retry last request", key=f"retry_{st.session_state.current_chat}")
 
 if prompt or retry:
