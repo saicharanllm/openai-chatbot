@@ -3,7 +3,7 @@ import os
 
 import streamlit as st
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import APIError, AuthenticationError, OpenAI, RateLimitError
 
 load_dotenv()  # reads OPENAI_API_KEY from a local .env file (never commit it)
 
@@ -41,10 +41,29 @@ if prompt := st.chat_input("Type your message..."):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages,
-            stream=True,
-        )
-        reply = st.write_stream(stream)
+        try:
+            stream = client.chat.completions.create(
+                model=MODEL,
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages,
+                stream=True,
+            )
+            reply = st.write_stream(stream)
+        except AuthenticationError:
+            st.error("Invalid OpenAI API key. Check the key and try again.")
+            st.session_state.messages.pop()
+            st.stop()
+        except RateLimitError as e:
+            if "insufficient_quota" in str(e):
+                st.error(
+                    "Your OpenAI account has no credits left. Add credits at "
+                    "https://platform.openai.com/settings/organization/billing/overview and try again."
+                )
+            else:
+                st.warning("Too many requests right now. Please wait a few seconds and try again.")
+            st.session_state.messages.pop()
+            st.stop()
+        except APIError as e:
+            st.error(f"OpenAI error: {e}")
+            st.session_state.messages.pop()
+            st.stop()
     st.session_state.messages.append({"role": "assistant", "content": reply})
