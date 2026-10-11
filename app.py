@@ -80,8 +80,37 @@ st.markdown(
         margin: 18px 0 4px 10px;
     }
     .side-empty { color: #b0b0b0; font-size: 14px; margin: 0 0 6px 10px; }
+    /* Borderless sections like ChatGPT (Features / Recents) */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details {
+        border: none !important; background: transparent !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        padding: 4px 10px; color: #8e8e8e; font-size: 14px; font-weight: 600;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { color: #555; }
+    section[data-testid="stSidebar"] [data-testid="stExpanderDetails"] {
+        padding: 0 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 2px; }
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
+        gap: 0 !important; border-radius: 10px; flex-wrap: nowrap !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:hover { background: #ececec; }
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] [data-testid="stColumn"] {
+        min-width: 0 !important;
+    }
+    /* Compact ⋯ menu button: no border, no arrow, shown on hover */
     section[data-testid="stSidebar"] [data-testid="stPopover"] button {
-        border: none; background: transparent; padding: 4px 6px;
+        border: none !important; background: transparent !important;
+        padding: 2px 8px !important; min-height: 0; width: auto !important;
+        font-size: 18px; color: #555;
+    }
+    section[data-testid="stSidebar"] [data-testid="stPopover"] button [data-testid="stIconMaterial"],
+    section[data-testid="stSidebar"] [data-testid="stPopover"] button svg { display: none !important; }
+    section[data-testid="stSidebar"] [data-testid="stPopover"] { opacity: 0; transition: opacity .15s; }
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:hover [data-testid="stPopover"] { opacity: 1; }
+    @media (hover: none) {
+        section[data-testid="stSidebar"] [data-testid="stPopover"] { opacity: 1; }
     }
     </style>
     """,
@@ -139,7 +168,7 @@ with st.sidebar:
         if not chats:
             st.markdown('<div class="side-empty">No chats yet</div>', unsafe_allow_html=True)
         for cid, chat in chats:
-            col_title, col_menu = st.columns([0.82, 0.18], vertical_alignment="center")
+            col_title, col_menu = st.columns([0.85, 0.15], vertical_alignment="center")
             label = ("📌 " if chat["pinned"] else "") + chat["title"]
             with col_title:
                 if st.button(
