@@ -77,9 +77,9 @@ st.markdown(
     }
     .side-heading {
         color: #8e8e8e; font-size: 14px; font-weight: 600;
-        margin: 18px 0 4px 10px;
+        padding: 18px 0 4px 0;
     }
-    .side-empty { color: #b0b0b0; font-size: 14px; margin: 0 0 6px 10px; }
+    .side-empty { color: #b0b0b0; font-size: 14px; padding: 0 0 14px 0; }
     /* Borderless sections like ChatGPT (Features / Recents) */
     section[data-testid="stSidebar"] [data-testid="stExpander"] details {
         border: none !important; background: transparent !important;
@@ -89,7 +89,23 @@ st.markdown(
     }
     section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { color: #555; }
     section[data-testid="stSidebar"] [data-testid="stExpanderDetails"] {
-        padding: 0 !important;
+        padding: 0 !important; border: none !important;
+    }
+    section[data-testid="stSidebar"] .stButton,
+    section[data-testid="stSidebar"] [data-testid="stElementContainer"]:has(.stButton) {
+        width: 100% !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button { width: 100% !important; }
+    section[data-testid="stSidebar"] .stButton > button > div {
+        justify-content: flex-start !important; width: 100%; min-width: 0;
+    }
+    section[data-testid="stSidebar"] .stButton > button p { text-align: left; }
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton > button:hover,
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton > button[kind="primary"] {
+        background: transparent;
+    }
+    section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:has(button[kind="primary"]) {
+        background: #ececec;
     }
     section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 2px; }
     section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
