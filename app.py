@@ -99,8 +99,10 @@ def call_gemini(key, contents, image_mode=False, live_web=True):
             body["tools"] = [{"googleSearch": {}}]
         # Gemini 3 search grounding can have zero free-tier quota even when text
         # generation is available. Keep web answers on a separately configured
-        # grounding model, using exactly the same Google API key.
-        models = [WEB_MODEL] if live_web else [MODEL, "gemini-2.5-flash"]
+        # grounding model, using exactly the same Google API key. Some newer
+        # projects cannot access 2.5 even when AI Studio lists its quota. Only
+        # a 404 falls back to the configured current Gemini model.
+        models = [WEB_MODEL, MODEL] if live_web else [MODEL, "gemini-2.5-flash"]
     payload = json.dumps(body).encode("utf-8")
     if len(payload) > MAX_REQUEST_BYTES:
         raise ValueError("This conversation is too large to send. Start a new chat with fewer or smaller files.")
